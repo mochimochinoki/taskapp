@@ -9,21 +9,23 @@
 import UIKit
 import RealmSwift
 import UserNotifications
-class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSource,UISearchBarDelegate {
+    @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
     //Realmインスタンスを取得する
     let realm = try! Realm()
-    
     //DB内のタスクが収納されるリスト
     //日付近い順\順でソート：降順
     //以降内容を更新すると自動的にアップデートされる。
+//    var task = Task()
     var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date",ascending: false)
-
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         tableView.delegate = self
         tableView.dataSource = self
+        searchBar.delegate = self
+        searchBar.enablesReturnKeyAutomatically = false
     }
     
     override func didReceiveMemoryWarning() {
@@ -40,16 +42,21 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
         //再利用可能なcellを得る
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath as IndexPath)
         
+        //Tag番号でセルに含まれるラベルを取得する。
+        let label1 = cell.viewWithTag(1) as! UILabel
+        let label2 = cell.viewWithTag(2) as! UILabel
+        let label3 = cell.viewWithTag(3) as! UILabel
+        
         //Cellに値を設定する
         let task = taskArray[indexPath.row]
-        cell.textLabel?.text = task.title
+        label1.text = task.title
         
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         
         let dateString:String = formatter.string(from: task.date as Date)
-        cell.detailTextLabel?.text = dateString
-        
+        label2.text = dateString
+        label3.text = task.category
         return cell
     }
     // MARK: UITableViewDelegateプロトコルのメソッド
@@ -76,6 +83,22 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
                     
             }
         }
+    }
+    //検索ボタンが押された時の呼び出しメソッド
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let realm = try! Realm()
+        searchBar.endEditing(true)
+        if searchBar.text == "" {
+            //検索文字列が空の場合はすべてを表示する。
+            taskArray = realm.objects(Task.self).sorted(byKeyPath: "date",ascending: false)
+
+        } else {
+            //検索文字列を含むデータを検索結果配列に追加する。
+            taskArray = realm
+                .objects(Task.self)
+                .filter("category == %@" , searchBar.text!).sorted(byKeyPath: "date",ascending: false)
+        }
+        tableView.reloadData()
     }
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let inputViewController:InputViewController = segue.destination as! InputViewController
