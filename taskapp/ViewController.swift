@@ -17,7 +17,6 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
     //DB内のタスクが収納されるリスト
     //日付近い順\順でソート：降順
     //以降内容を更新すると自動的にアップデートされる。
-//    var task = Task()
     var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date",ascending: false)
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +25,8 @@ class ViewController: UIViewController,UITableViewDelegate, UITableViewDataSourc
         tableView.dataSource = self
         searchBar.delegate = self
         searchBar.enablesReturnKeyAutomatically = false
+        tableView.estimatedRowHeight = 66
+        tableView.rowHeight = UITableViewAutomaticDimension    
     }
     
     override func didReceiveMemoryWarning() {
